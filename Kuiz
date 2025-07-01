@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Quiz Literasi & Numerasi SPMB Jabar 2025 Tahap 2</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+  <style>
+    /* -- BASIC RESET & LAYOUT -- */
+    * { box-sizing:border-box; margin:0; padding:0 }
+    html, body {
+      width:100%; height:100%; overflow:hidden;
+      font-family:'Roboto',sans-serif;
+      background:linear-gradient(135deg,#00f0ff,#0d1f56);
+      color:#f1f1f1; position:relative;
+    }
+    .screen {
+      position:absolute; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      padding:16px;
+    }
+    .hidden { display:none!important }
+    .card {
+      background:rgba(255,255,255,0.1);
+      border:1px solid rgba(255,255,255,0.18);
+      border-radius:12px; backdrop-filter:blur(10px);
+      box-shadow:0 8px 32px rgba(0,0,0,0.37);
+      width:100%; max-width:440px; overflow:hidden;
+    }
+    .card header {
+      background:#0d1f56; padding:24px;
+      text-align:center; font-family:'Orbitron',sans-serif;
+    }
+    .card header h1 {
+      color:#00ff99; font-size:24px; letter-spacing:1px;
+    }
+    .card .body { padding:24px; position:relative; }
+    input, select, button {
+      width:100%; padding:8px; margin:4px 0 16px;
+      border:none; border-radius:4px; font-size:14px;
+    }
+    input, select { background:rgba(255,255,255,0.2); color:#fff; }
+    button {
+      background:#00ff99; color:#0d1f56; padding:12px;
+      font-weight:500; cursor:pointer; transition:filter .2s;
+    }
+    button:disabled { opacity:.5; cursor:default }
+    button:hover:not(:disabled){ filter:brightness(1.1) }
+    .preset { margin-bottom:16px }
+    .preset label { display:flex; align-items:center; margin-bottom:8px }
+    .preset input { width:auto; margin-right:8px }
+    .toggles { display:flex; justify-content:space-between }
+    .toggle { display:flex; align-items:center; font-size:14px; color:#ccc }
+    .toggle input {
+      width:40px; height:20px; margin-right:8px;
+      -webkit-appearance:none; background:#555;
+      border-radius:10px; position:relative; cursor:pointer;
+      transition:background .3s;
+    }
+    .toggle input:checked{ background:#00ff99 }
+    .toggle input::before {
+      content:''; position:absolute; top:2px; left:2px;
+      width:16px; height:16px; background:#fff;
+      border-radius:50%; transition:left .3s;
+    }
+    .toggle input:checked::before{ left:22px }
+    #timer {
+      font-family:'Orbitron'; text-align:center;
+      margin:12px 0; color:#00ff99; font-size:18px;
+    }
+    .progress { height:4px; background:rgba(255,255,255,0.2); margin-bottom:16px }
+    .progress .bar {
+      width:0; height:100%; background:#00ff99;
+      transition:width .3s;
+    }
+    .question {
+      font-family:'Orbitron'; color:#00ff99;
+      font-size:18px; margin-bottom:12px;
+    }
+    .options label {
+      display:flex; align-items:center; padding:12px;
+      margin-bottom:8px; border:1px solid rgba(255,255,255,0.3);
+      border-radius:6px; cursor:pointer; transition:background .2s;
+      font-size:14px;
+    }
+    .options label:hover{ background:rgba(255,255,255,0.1) }
+    .options input{ margin-right:12px; accent-color:#00ff99 }
+    .nav {
+      display:flex; justify-content:space-between;
+      padding:16px 24px 24px;
+    }
+    .nav button{ background:#00ffff; color:#0d1f56 }
+    .material-icons{ font-size:18px; }
+    #resultCard .body {
+      position:relative; max-height:60vh; overflow-y:auto;
+    }
+    #review { max-height:200px; overflow-y:auto; margin:16px 0; }
+    .review-q {
+      background:rgba(0,0,0,0.2); padding:12px;
+      margin-bottom:8px; border-radius:6px; font-size:14px;
+    }
+    .right{ color:#4caf50 } .wrong{ color:#f44336 }
+    #shareCanvas{ display:block; margin:8px auto; border-radius:8px }
+    #shareBtn{ margin-top:8px;padding:12px;background:#00ff99;color:#0d1f56 }
+    .spark{
+      position:absolute;width:6px;height:6px;
+      background:#00ff99;border-radius:50%;
+      pointer-events:none;opacity:1;
+      transition:transform .6s ease-out,opacity .6s ease-out;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- WELCOME SCREEN -->
+  <div id="welcome" class="screen">
+    <div class="card">
+      <header><h1>WELCOME</h1></header>
+      <div class="body">
+        <label>Nama Lengkap</label>
+        <input type="text" id="userName" placeholder="Misal: Arfaryy"/>
+
+        <div class="preset">
+          <p>Pilih Paket Soal:</p>
+          <label><input type="radio" name="pkg" value="30" checked/>
+            30 Soal (15 Literasi + 15 Numerasi)</label>
+          <label><input type="radio" name="pkg" value="50"/>
+            50 Soal (25 Literasi + 25 Numerasi)</label>
+        </div>
+
+        <label>Tingkat Kesulitan</label>
+        <select id="difficulty">
+          <option value="easy">Mudah</option>
+          <option value="medium">Sedang</option>
+          <option value="hard">Sulit</option>
+        </select>
+
+        <div class="toggles">
+          <label class="toggle"><input type="checkbox" id="togMusic"/>Music</label>
+          <label class="toggle"><input type="checkbox" id="togFX" checked/>FX</label>
+        </div>
+        <button id="startBtn">MULAI QUIZ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ & RESULT -->
+  <div id="quizApp" class="screen hidden">
+    <div class="card" id="formCard">
+      <header><h1 id="quizTitle">QUIZ</h1></header>
+      <div id="timer">90:00</div>
+      <div class="progress"><div class="bar" id="progressBar"></div></div>
+      <div class="body" id="formBody"></div>
+      <div class="nav">
+        <button id="prevBtn" disabled>
+          <span class="material-icons">arrow_back</span>Prev
+        </button>
+        <button id="nextBtn">
+          Next<span class="material-icons">arrow_forward</span>
+        </button>
+      </div>
+    </div>
+    <div class="card hidden" id="resultCard">
+      <header><h1>Hasil</h1></header>
+      <div class="body">
+        <p>Benar: <strong id="correctCount"></strong></p>
+        <p>Salah: <strong id="wrongCount"></strong></p>
+        <button id="reviewBtn">Review Jawaban</button>
+        <div id="review" class="hidden"></div>
+        <canvas id="shareCanvas" width="400" height="400" class="hidden"></canvas>
+        <button id="shareBtn" class="hidden">Share ke WhatsApp</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // — BANK SOAL (Referensi: Tribun Jabar “40 Contoh Soal SPMB Jabar 2025 Tahap 2”) —
+    const bankLiterasi = {
+      easy: [
+        { q:'Sinonim “tesis” adalah…', opts:['Argumen','Kesimpulan','Pendapat','Pembahasan'], ans:'Argumen' },
+        { q:'Antonim “progresif” adalah…', opts:['Mundur','Cepat','Solid','Kuat'], ans:'Mundur' },
+        { q:'Sinonim “resensi” adalah…', opts:['Ulasan','Rangkuman','Review','Ringkasan'], ans:'Ulasan' },
+        { q:'Antonim “anarki” adalah…', opts:['Kekacauan','Kekuasaan','Ketertiban','Keamanan'], ans:'Ketertiban' },
+        { q:'Sinonim “demografis” adalah…', opts:['Statistik','Sosial','Ekonomi','Budaya'], ans:'Statistik' },
+        { q:'Antonim “inferensi” adalah…', opts:['Kesimpulan','Fakta','Anggapan','Hipotesis'], ans:'Fakta' },
+        { q:'Analogi: Bromo : Gunung = Kapuas : …', opts:['Sungai','Danau','Laut','Bukit'], ans:'Sungai' },
+        { q:'Makna utama paragraf tentang “digitalisasi pendidikan” adalah…', opts:[
+          'Perubahan metode belajar','Penurunan kualitas guru',
+          'Beban biaya siswa','Isolasi sosial'
+        ], ans:'Perubahan metode belajar' },
+        { q:'Sinonim “formatif” adalah…', opts:['Konstruktif','Evaluatif','Pembelajaran','Penilaian'], ans:'Evaluatif' },
+        { q:'Antonim “homogen” adalah…', opts:['Bervariasi','Seragam','Terliterasi','Stabil'], ans:'Bervariasi' },
+        { q:'Pemilihan kata “eksplisit” tepat untuk…', opts:[
+          'Instruksi yang jelas','Gaya bahasa puitis',
+          'Narasi imajinatif','Kalimat implisit'
+        ], ans:'Instruksi yang jelas' },
+        { q:'Antonim “kolokal” (colloquial) adalah…', opts:['Resmi','Santai','Populer','Umum'], ans:'Resmi' },
+        { q:'Sinonim “diskursus” adalah…', opts:['Pembahasan','Pertengkaran','Debat','Konflik'], ans:'Pembahasan' },
+        { q:'Antonim “redundan” adalah…', opts:['Ringkas','Tidak perlu','Rincian','Lengkap'], ans:'Ringkas' },
+        { q:'Sinonim “heuristik” adalah…', opts:['Eksplorasi','Analisis','Sistematik','Formal'], ans:'Eksplorasi' }
+      ],
+      medium: [
+        // … tambah 15+ soal literasi tingkat sedang mengikuti gaya referensi …
+      ],
+      hard: [
+        // … tambah 15+ soal literasi tingkat sulit yang lebih kompleks …
+      ]
+    };
+
+    const bankNumerasi = {
+      easy: [
+        { q:'3 anak →6 hari kerja. 6 anak → … hari?', opts:['2','3','4','5'], ans:'3' },
+        { q:'12 + 18 ÷ 5 = …', opts:['5','6','7','8'], ans:'6' },
+        { q:'Jika x+2=9, maka 2x = …', opts:['10','12','14','16'], ans:'14' },
+        { q:'Perjalanan 3 km pulang–pergi 6 hari = … jam? (4 km/jam)', opts:['6','7','8','9'], ans:'9' },
+        { q:'Beras 4×100 kg = Rp680.000. Jual Rp2.300/kg → untung?', opts:[
+          'Rp200.000','Rp220.000','Rp240.000','Rp260.000'
+        ], ans:'Rp240.000' },
+        { q:'Ayah 4× umur anak(8 thn) = …', opts:['24','28','32','36'], ans:'32' },
+        { q:'½ + ⅓ = …', opts:['5/6','4/5','5/7','3/5'], ans:'5/6' },
+        { q:'Luas persegi sisi 7 cm = …', opts:['49','56','14','28'], ans:'49' },
+        { q:'Rata-rata 5, 7, 9 = …', opts:['6','7','8','9'], ans:'7' },
+        { q:'3x = 12 → x = ?', opts:['2','3','4','5'], ans:'4' },
+        { q:'20% of 200 = …', opts:['20','40','60','80'], ans:'40' },
+        { q:'Rasio 2:3 dari 10 = …', opts:['4','6','5','8'], ans:'4' },
+        { q:'Jika a > b > c, maka a ? c adalah …', opts:['>','<','=','?'], ans:'>' },
+        { q:'Barisan: 2,4,6,… → suku ke-4 = …', opts:['8','10','12','14'], ans:'8' },
+        { q:'3 koin Rp500 → total = …', opts:['1.000','1.500','2.000','2.500'], ans:'1.500' }
+      ],
+      medium: [
+        // … tambah 15+ soal numerasi tingkat sedang …
+      ],
+      hard: [
+        // … tambah 15+ soal numerasi tingkat sulit (aljabar, geometri, statistik) …
+      ]
+    };
+
+    // — UTILITIES — 
+    function shuffle(a){
+      for(let i=a.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [a[i],a[j]]=[a[j],a[i]];
+      }
+      return a;
+    }
+    function sample(arr,n){
+      const a=arr.slice(),r=[];
+      for(let i=0;i<n;i++){
+        const idx=Math.floor(Math.random()*a.length);
+        r.push(a.splice(idx,1)[0]);
+      }
+      return r;
+    }
+
+    // — STATE & ELEMENTS — 
+    let questions=[], answers=[], current=0;
+    let userName='', playMusic=false, playFX=false;
+    const totalTime = 90*60, audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    let musicSrc = null, timerId = null;
+
+    const welcome    =document.getElementById('welcome'),
+          startBtn   =document.getElementById('startBtn'),
+          nameIn     =document.getElementById('userName'),
+          diff       =document.getElementById('difficulty'),
+          quizApp    =document.getElementById('quizApp'),
+          quizTitle  =document.getElementById('quizTitle'),
+          timerEl    =document.getElementById('timer'),
+          formBody   =document.getElementById('formBody'),
+          prevBtn    =document.getElementById('prevBtn'),
+          nextBtn    =document.getElementById('nextBtn'),
+          progBar    =document.getElementById('progressBar'),
+          formCard   =document.getElementById('formCard'),
+          resultCard =document.getElementById('resultCard'),
+          corrCt     =document.getElementById('correctCount'),
+          wrongCt    =document.getElementById('wrongCount'),
+          reviewBtn  =document.getElementById('reviewBtn'),
+          reviewDiv  =document.getElementById('review'),
+          shareBtn   =document.getElementById('shareBtn'),
+          shareCanvas=document.getElementById('shareCanvas'),
+          fxCtx      = new (window.AudioContext||window.webkitAudioContext)();
+
+    // — Audio from GitHub Base64 —
+    const base64Url = 'https://raw.githubusercontent.com/ArfaAry/Guiz/main/base64.txt';
+    async function startBgMusic(){
+      const b = (await fetch(base64Url).then(r=>r.text())).trim();
+      const bin = atob(b), buf = new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++) buf[i]=bin.charCodeAt(i);
+      const audBuf = await audioCtx.decodeAudioData(buf.buffer);
+      musicSrc = audioCtx.createBufferSource();
+      musicSrc.buffer = audBuf;
+      musicSrc.loop   = true;
+      musicSrc.connect(audioCtx.destination);
+      musicSrc.start(0);
+    }
+    function stopBgMusic(){
+      if(musicSrc){ musicSrc.stop(); musicSrc.disconnect(); musicSrc=null; }
+    }
+
+    // — START QUIZ —
+    startBtn.addEventListener('click',()=>{
+      if(!nameIn.value.trim()){ alert('Nama wajib diisi!'); return; }
+      userName = nameIn.value.trim();
+      playMusic = document.getElementById('togMusic').checked;
+      playFX    = document.getElementById('togFX').checked;
+      const pkg = +document.querySelector('input[name=pkg]:checked').value;
+      const half= pkg/2;
+      const d   = diff.value;
+      const lit = sample(bankLiterasi[d], half);
+      const num = sample(bankNumerasi[d], half);
+      questions = shuffle([...lit, ...num]);
+      answers   = Array(questions.length).fill(null);
+
+      quizTitle.textContent = `Quiz untuk ${userName}`;
+      if(playMusic){
+        if(audioCtx.state==='suspended') audioCtx.resume();
+        startBgMusic();
+      }
+
+      welcome.classList.add('hidden');
+      quizApp.classList.remove('hidden');
+      startTimer();
+      renderQuestion();
+    });
+
+    // — TIMER —
+    function startTimer(){
+      let t = totalTime;
+      timerEl.textContent = formatTime(t);
+      timerId = setInterval(()=>{
+        if(--t < 0){ clearInterval(timerId); showResult(); }
+        timerEl.textContent = formatTime(t);
+      },1000);
+    }
+    function formatTime(s){
+      const m = String(Math.floor(s/60)).padStart(2,'0'),
+            ss= String(s%60).padStart(2,'0');
+      return `${m}:${ss}`;
+    }
+
+    // — RENDER QUESTION —
+    function renderQuestion(){
+      const {q, opts} = questions[current];
+      formBody.innerHTML = `
+        <div class="question">${current+1}. ${q}</div>
+        <div class="options">${
+          opts.map((o,i)=>`
+            <label><input type="radio" name="opt" value="${i}"/>${o}</label>
+          `).join('')
+        }</div>`;
+      prevBtn.disabled = current===0;
+      nextBtn.innerHTML = current<questions.length-1
+        ? `Next<span class="material-icons">arrow_forward</span>`
+        : `Submit<span class="material-icons">send</span>`;
+      progBar.style.width = `${(current/questions.length)*100}%`;
+      nextBtn.disabled = true;
+
+      if(playFX){
+        formBody.querySelectorAll('.options label')
+          .forEach(lbl=> lbl.addEventListener('click', e=>{
+            nextBtn.disabled = false;
+            playSpark(e);
+          }));
+      }
+    }
+
+    // — NAVIGATION —
+    nextBtn.addEventListener('click', ()=>{
+      const sel = formBody.querySelector('input[name=opt]:checked');
+      if(!sel) return alert('Pilih jawaban!');
+      answers[current] = questions[current].opts[+sel.value];
+      if(current < questions.length-1){
+        current++; renderQuestion();
+      } else {
+        showResult();
+      }
+    });
+    prevBtn.addEventListener('click', ()=>{
+      if(current>0){ current--; renderQuestion(); }
+    });
+
+    // — SHOW RESULT —
+    function showResult(){
+      clearInterval(timerId);
+      stopBgMusic();
+      const correct = answers.reduce((sum,a,i)=>
+        sum + (a===questions[i].ans ? 1 : 0), 0);
+      corrCt.textContent  = correct;
+      wrongCt.textContent = questions.length - correct;
+      formCard.classList.add('hidden');
+      resultCard.classList.remove('hidden');
+    }
+
+    // — REVIEW & SHARE —
+    reviewBtn.addEventListener('click', ()=>{
+      reviewDiv.innerHTML = questions.map((q,i)=>`
+        <div class="review-q">
+          <p>${i+1}. ${q.q}</p>
+          <p>Your: ${answers[i]} <span class="${answers[i]===q.ans?'right':'wrong'}">${
+            answers[i]===q.ans?'✓':'✗'
+          }</span></p>
+          <p>Ans : ${q.ans} <span class="right">✓</span></p>
+        </div>
+      `).join('');
+      reviewDiv.classList.remove('hidden');
+      shareCanvas.classList.remove('hidden');
+      shareBtn.classList.remove('hidden');
+      generateShareImage();
+    });
+
+    function generateShareImage(){
+      const ctx = shareCanvas.getContext('2d');
+      const w = shareCanvas.width = 400;
+      const h = shareCanvas.height = 400;
+      const grad = ctx.createRadialGradient(w/2,h/2,w*0.1,w/2,h/2,w/2);
+      grad.addColorStop(0,'#0d1f56'); grad.addColorStop(1,'#00f0ff');
+      ctx.fillStyle = grad; ctx.fillRect(0,0,w,h);
+      for(let i=0;i<3;i++){
+        ctx.beginPath();
+        ctx.arc(w/2,h/2,w*0.3+i*20,0,2*Math.PI);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = `rgba(0,255,153,${0.3 - i*0.1})`;
+        ctx.stroke();
+      }
+      ctx.textAlign = 'center';
+      ctx.shadowColor = '#00ff99'; ctx.shadowBlur = 10;
+      ctx.fillStyle = '#00ff99'; ctx.font = '24px Orbitron';
+      ctx.fillText('YOUR SCORE', w/2, h*0.4);
+      ctx.shadowBlur = 20; ctx.font = 'bold 64px Orbitron';
+      ctx.fillText(`${corrCt.textContent}/${questions.length}`, w/2, h*0.6);
+      ctx.shadowBlur = 0; ctx.fillStyle = '#ffffff'; ctx.font = '16px Roboto';
+      ctx.fillText(userName, w/2, h*0.85);
+    }
+
+    // — SPARK FX —
+    function playSpark(e){
+      const cont = formBody;
+      const r = cont.getBoundingClientRect();
+      const x = e.clientX - r.left, y = e.clientY - r.top;
+      for(let i=0;i<15;i++){
+        const s = document.createElement('div');
+        s.className = 'spark';
+        s.style.left = `${x}px`; s.style.top = `${y}px`;
+        cont.appendChild(s);
+        const ang = Math.random()*2*Math.PI, d = 20+Math.random()*30;
+        const dx = Math.cos(ang)*d, dy = Math.sin(ang)*d;
+        requestAnimationFrame(()=>{
+          s.style.transform = `translate(${dx}px,${dy}px)`;
+          s.style.opacity = 0;
+        });
+        s.addEventListener('transitionend', ()=> s.remove());
+      }
+      const now = fxCtx.currentTime;
+      const o   = fxCtx.createOscillator(), g = fxCtx.createGain();
+      o.type = 'square'; o.frequency.value = 900+Math.random()*300;
+      g.gain.setValueAtTime(0.08, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now+0.05);
+      o.connect(g).connect(fxCtx.destination);
+      o.start(now); o.stop(now+0.05);
+    }
+  </script>
+</body>
+</html>
